@@ -1,18 +1,33 @@
-#include <Arduino.h>
+#include "RFIDScanner.h"
+#include "AuthorizationManager.h"
 
-// put function declarations here:
-int myFunction(int, int);
+RFIDScanner rfid(5, 4); // SDA: GPIO 5, RST: GPIO 4
+String authorizedUIDs[] = {"03CC1F2D", "23A0E107"}; // Authorized UIDs
+AuthorizationManager auth(authorizedUIDs, 2); // Pass array and count
 
 void setup() {
-  // put your setup code here, to run once:
-  int result = myFunction(2, 3);
+    Serial.begin(115200);
+    delay(1000);
+    Serial.println("Starting RFID scanner...");
+    rfid.init();
+    Serial.println("Ready to scan RFID cards...");
+}
+
+void handleRFIDScan() {
+    String cardUID = rfid.scanCard();
+    if (cardUID != "") {
+        Serial.println("--- RFID Card Detected ---");
+        Serial.println("UID: " + cardUID);
+        if (auth.isAuthorized(cardUID)) {
+            Serial.println("Access OK");
+        } else {
+            Serial.println("Access Blocked");
+        }
+        Serial.println("------------------------");
+    }
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-}
-
-// put function definitions here:
-int myFunction(int x, int y) {
-  return x + y;
+    handleRFIDScan();
+    delay(1000); // Prevent rapid scanning
 }
